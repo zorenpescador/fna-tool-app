@@ -1,18 +1,3 @@
-st.markdown("""
-# 📊 Financial Needs Analysis Tool  
-**_By Zoren Pescador – Unit Head, Manulife Philippines_**
-
-Quickly assess your financial readiness for:
-- 🛡️ Protection (Life/Health Insurance)
-- 🧓 Retirement Planning
-- 🎓 Education Planning
-
----
-
-📩 [zorenpescador@gmail.com](mailto:zorenpescador@gmail.com)  
-📱 0969-420-6214  
-""")
-
 import streamlit as st
 
 # === Future Value for Retirement and Education ===
