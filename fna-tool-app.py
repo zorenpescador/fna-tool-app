@@ -32,7 +32,7 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
         "total_fund_needed": total_fund_needed
     }
 
-# === Streamlit App with Integrated FNA + Retirement + Education ===
+# === Streamlit App with Integrated FNA + Retirement + Education + Health ===
 def run_streamlit_app():
     st.title("📊 FNA Tool by Zoren Pescador - UH ManulifePH")
 
@@ -57,6 +57,11 @@ def run_streamlit_app():
         current_annual_tuition = st.number_input("Current Annual Tuition (₱)", 10000.0, 1000000.0, 60000.0)
         tuition_inflation = st.slider("Annual Tuition Inflation Rate (%)", 0.0, 10.0, 5.0) / 100
         college_years = st.slider("Years of College", 2, 6, 4)
+
+        st.subheader("🩺 Health Insurance Plan")
+        current_health_coverage = st.number_input("Your Current Health Coverage (₱)", 0.0, value=100000.0)
+        desired_coverage_per_person = st.number_input("Desired Health Coverage per Person (₱)", 0.0, value=500000.0)
+        num_dependents = st.slider("Number of People to Cover (including you)", 1, 10, 4)
 
         submitted = st.form_submit_button("Generate Report")
 
@@ -85,6 +90,10 @@ def run_streamlit_app():
         months_to_college = edu['years_until_college'] * 12
         monthly_needed_no_growth = edu['total_fund_needed'] / months_to_college if months_to_college > 0 else 0
         monthly_needed_with_growth = required_monthly_saving(edu['total_fund_needed'], 0.06, months_to_college)
+
+        # Health Insurance Calculation
+        total_desired_health = desired_coverage_per_person * num_dependents
+        health_coverage_gap = max(0, total_desired_health - current_health_coverage)
 
         # Display Results
         st.subheader(f"📋 FNA Summary for {name}")
@@ -117,5 +126,10 @@ def run_streamlit_app():
         st.write(f"**Total Education Fund Needed: ₱{edu['total_fund_needed']:,.2f}**")
         st.write(f"📌 Monthly Savings Needed (No Compounding): ₱{monthly_needed_no_growth:,.2f}")
         st.write(f"📈 Monthly Savings Needed (6% Growth): ₱{monthly_needed_with_growth:,.2f}")
+
+        st.subheader("🩺 Health Insurance Summary")
+        st.write(f"- Total Desired Health Coverage: ₱{total_desired_health:,.2f}")
+        st.write(f"- Current Health Coverage: ₱{current_health_coverage:,.2f}")
+        st.write(f"**🩺 Health Coverage Gap: ₱{health_coverage_gap:,.2f}**")
 
 run_streamlit_app()
