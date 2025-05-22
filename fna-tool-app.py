@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.graph_objects as go
 
 # === Future Value Calculator (Compounding Monthly) ===
 def future_value_monthly(pmt, annual_rate, months):
@@ -97,7 +98,6 @@ def run_streamlit_app():
 
         st.subheader(f"📋 FNA Summary for {name}")
         st.write("### 📌 Monthly Budget Breakdown")
-        st.write("The 50-30-20 rule is a simple, effective budgeting framework designed to help people manage their money wisely without complex calculations.")
         st.write(f"- Needs: ₱{needs:.2f}")
         st.write(f"- Wants: ₱{wants:.2f}")
         st.write(f"- Savings Goal: ₱{savings_goal:.2f}")
@@ -132,7 +132,29 @@ def run_streamlit_app():
         st.write(f"• 8%: ₱{fund_8:.2f}")
         st.write(f"• 10%: ₱{fund_10:.2f}")
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
-        st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
-        st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
+
+        # Retirement Fund Growth Chart
+        st.subheader("📈 Retirement Fund Growth Projection")
+        years_range = list(range(1, years_to_retirement + 1))
+        fund_4_list = [future_value_monthly(monthly_retirement_saving, 0.04, y * 12) for y in years_range]
+        fund_8_list = [future_value_monthly(monthly_retirement_saving, 0.08, y * 12) for y in years_range]
+        fund_10_list = [future_value_monthly(monthly_retirement_saving, 0.10, y * 12) for y in years_range]
+        target_line = [total_retirement_fund] * len(years_range)
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=years_range, y=fund_4_list, mode='lines', name='4% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=fund_8_list, mode='lines', name='8% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=fund_10_list, mode='lines', name='10% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=target_line, mode='lines', name='Target Retirement Fund', line=dict(dash='dash')))
+
+        fig.update_layout(
+            title="Projected Retirement Fund vs Goal",
+            xaxis_title="Years Until Retirement",
+            yaxis_title="Projected Fund Value (₱)",
+            legend_title="Growth Rate",
+            template="plotly_white"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
 run_streamlit_app()
