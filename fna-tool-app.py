@@ -1,7 +1,9 @@
 import streamlit as st
 import plotly.graph_objects as go
 from fpdf import FPDF
+import tempfile
 import datetime
+import os
 
 # === Future Value Calculator (Compounding Monthly) ===
 def future_value_monthly(pmt, annual_rate, months):
@@ -39,7 +41,7 @@ def generate_pdf(data, name):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    
+
     pdf.set_title("FNA Summary Report")
     pdf.cell(200, 10, txt=f"FNA Summary for {name}", ln=True, align='C')
     pdf.cell(200, 10, txt=f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
@@ -49,9 +51,9 @@ def generate_pdf(data, name):
         label = key.replace("_", " ").capitalize()
         pdf.cell(200, 10, txt=f"{label}: ₱{value:,.2f}", ln=True)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        pdf.output(tmp_file.name)
-        return tmp_file.name
+    fd, path = tempfile.mkstemp(suffix=".pdf")
+    pdf.output(path)
+    return path
 
 # === Streamlit App ===
 def run_streamlit_app():
