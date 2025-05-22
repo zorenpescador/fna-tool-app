@@ -97,6 +97,7 @@ def run_streamlit_app():
 
         st.subheader(f"📋 FNA Summary for {name}")
         st.write("### 📌 Monthly Budget Breakdown")
+        st.write("The 50-30-20 rule is a simple, effective budgeting framework designed to help people manage their money wisely without complex calculations.")
         st.write(f"- Needs: ₱{needs:.2f}")
         st.write(f"- Wants: ₱{wants:.2f}")
         st.write(f"- Savings Goal: ₱{savings_goal:.2f}")
