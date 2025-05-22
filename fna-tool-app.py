@@ -56,7 +56,7 @@ def run_streamlit_app():
         monthly_retirement_saving = st.number_input("Monthly Retirement Saving (₱)", 0.0, value=8000.0)
         submitted = st.form_submit_button("Generate Report")
 
-     if submitted:
+    if submitted:
         needs = income * 0.50
         wants = income * 0.30
         savings_goal = income * 0.20
@@ -135,5 +135,4 @@ def run_streamlit_app():
         fig.update_layout(title="Retirement Fund Growth", xaxis_title="Years", yaxis_title="₱", template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
 
- 
 run_streamlit_app()
