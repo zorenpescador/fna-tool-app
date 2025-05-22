@@ -1,9 +1,5 @@
 import streamlit as st
 import plotly.graph_objects as go
-from fpdf import FPDF
-import tempfile
-import datetime
-import os
 
 # === Future Value Calculator ===
 def future_value_monthly(pmt, annual_rate, months):
@@ -35,28 +31,6 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
         "total_fund_needed": total_fund_needed
     }
 
-# === PDF Generator ===
-def generate_pdf(data, name):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=12)
-    pdf.set_title("FNA Summary Report")
-    pdf.cell(200, 10, txt=f"FNA Summary for {name}", ln=True, align='C')
-    pdf.cell(200, 10, txt=f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
-    pdf.ln(10)
-    for key, value in data.items():
-        label = key.replace("_", " ").capitalize()
-        if isinstance(value, (int, float)):
-            formatted_value = f"₱{value:,.2f}"
-        elif isinstance(value, list):
-            formatted_value = ", ".join([f"₱{v:,.2f}" if isinstance(v, (int, float)) else str(v) for v in value])
-        else:
-            formatted_value = str(value)
-        pdf.cell(200, 10, txt=f"{label}: {formatted_value}", ln=True)
-    fd, path = tempfile.mkstemp(suffix=".pdf")
-    pdf.output(path)
-    return path
-
 # === Streamlit App ===
 def run_streamlit_app():
     st.title("📊 FNA Tool by Zoren Pescador - UH ManulifePH")
@@ -82,33 +56,70 @@ def run_streamlit_app():
         monthly_retirement_saving = st.number_input("Monthly Retirement Saving (₱)", 0.0, value=8000.0)
         submitted = st.form_submit_button("Generate Report")
 
-    if submitted:
+ if submitted:
         needs = income * 0.50
         wants = income * 0.30
         savings_goal = income * 0.20
-        emergency_fund_needed = expenses * 6
         recommended_life_coverage = income * 12 * 10
         insurance_gap = max(0, recommended_life_coverage - insurance)
+
         years_to_retirement = max(0, retirement_age - age)
         months_to_retirement = years_to_retirement * 12
         annual_expenses_now = expenses * 12
-        inflated_annual_expenses = annual_expenses_now * ((1 + inflation_rate) ** years_to_retirement)
+        inflation_multiplier = (1 + inflation_rate) ** years_to_retirement
+        inflated_annual_expenses = annual_expenses_now * inflation_multiplier
         total_retirement_fund = inflated_annual_expenses * years_in_retirement
         fund_4 = future_value_monthly(monthly_retirement_saving, 0.04, months_to_retirement)
         fund_8 = future_value_monthly(monthly_retirement_saving, 0.08, months_to_retirement)
         fund_10 = future_value_monthly(monthly_retirement_saving, 0.10, months_to_retirement)
+
         edu = calculate_education_fund(child_age, college_age, current_annual_tuition, tuition_inflation, college_years)
         months_to_college = edu['years_until_college'] * 12
+        monthly_needed_no_growth = edu['total_fund_needed'] / months_to_college if months_to_college > 0 else 0
         monthly_needed_with_growth = required_monthly_saving(edu['total_fund_needed'], 0.06, months_to_college)
+
         total_desired_health = desired_coverage_per_person * num_dependents
         health_coverage_gap = max(0, total_desired_health - current_health_coverage)
 
-        st.subheader(f"📋 Summary for {name}")
-        st.write(f"• Needs: ₱{needs:,.2f} | Wants: ₱{wants:,.2f} | Savings: ₱{savings_goal:,.2f}")
-        st.write(f"• Life Insurance Gap: ₱{insurance_gap:,.2f} | Health Gap: ₱{health_coverage_gap:,.2f}")
-        st.write(f"• Total Education Fund: ₱{edu['total_fund_needed']:,.2f} | Monthly Save: ₱{monthly_needed_with_growth:,.2f}")
-        st.write(f"• Retirement Goal: ₱{total_retirement_fund:,.2f}")
-        st.write(f"• Retirement Fund at 4%: ₱{fund_4:,.2f} | 8%: ₱{fund_8:,.2f} | 10%: ₱{fund_10:,.2f}")
+        st.subheader(f"📋 FNA Summary for {name}")
+        st.write("### 📌 Monthly Budget Breakdown")
+        st.write("The 50-30-20 rule is a simple, effective budgeting framework designed to help people manage their money wisely without complex calculations.")
+        st.write(f"- Needs: ₱{needs:.2f}")
+        st.write(f"- Wants: ₱{wants:.2f}")
+        st.write(f"- Savings Goal: ₱{savings_goal:.2f}")
+        st.write("### 🛟 Emergency Fund")
+        st.write(f"- Recommended: ₱{emergency_fund_needed:.2f}")
+
+        st.write("### 🛡️ Life Insurance")
+        st.write(f"- Current Coverage: ₱{insurance:.2f}")
+        st.write(f"- Recommended: ₱{recommended_life_coverage:.2f}")
+        st.write(f"- Gap: ₱{insurance_gap:.2f}")
+
+        st.write("### 🩺 Health Insurance Summary")
+        st.write(f"- Total Desired Health Coverage: ₱{total_desired_health:,.2f}")
+        st.write(f"- Current Health Coverage: ₱{current_health_coverage:,.2f}")
+        st.write(f"**🩺 Health Coverage Gap: ₱{health_coverage_gap:,.2f}**")
+
+        st.subheader("🎓 Educational Plan Summary")
+        st.write(f"- Years Until College: {edu['years_until_college']}")
+        for i, cost in enumerate(edu['tuition_projection'], 1):
+            st.write(f"Year {i} Tuition: ₱{cost:,.2f}")
+        st.write(f"**Total Education Fund Needed: ₱{edu['total_fund_needed']:,.2f}**")
+        st.write(f"📌 Monthly Savings Needed (No Compounding): ₱{monthly_needed_no_growth:,.2f}")
+        st.write(f"📈 Monthly Savings Needed (6% Growth): ₱{monthly_needed_with_growth:,.2f}")
+
+        st.write("### 🧓 Retirement Planning")
+        st.write(f"- Years to Retirement: {years_to_retirement}")
+        st.write(f"- Inflation-Adjusted Annual Expenses: ₱{inflated_annual_expenses:.2f}")
+        st.write(f"- Total Retirement Fund Needed: ₱{total_retirement_fund:.2f}")
+        st.write(f"- Monthly Saving: ₱{monthly_retirement_saving:.2f}")
+        st.write(f"**Projected Retirement Fund:**")
+        st.write(f"• 4%: ₱{fund_4:.2f}")
+        st.write(f"• 8%: ₱{fund_8:.2f}")
+        st.write(f"• 10%: ₱{fund_10:.2f}")
+        st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
+        st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
+        st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
 
         years_range = list(range(1, years_to_retirement + 1))
         fund_4_list = [future_value_monthly(monthly_retirement_saving, 0.04, y * 12) for y in years_range]
@@ -124,25 +135,5 @@ def run_streamlit_app():
         fig.update_layout(title="Retirement Fund Growth", xaxis_title="Years", yaxis_title="₱", template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
 
-        pdf_data = {
-            "needs": needs,
-            "wants": wants,
-            "savings_goal": savings_goal,
-            "emergency_fund_needed": emergency_fund_needed,
-            "recommended_life_coverage": recommended_life_coverage,
-            "insurance_gap": insurance_gap,
-            "total_desired_health": total_desired_health,
-            "health_coverage_gap": health_coverage_gap,
-            "total_education_fund": edu['total_fund_needed'],
-            "retirement_fund_target": total_retirement_fund,
-            "fund_4": fund_4,
-            "fund_8": fund_8,
-            "fund_10": fund_10
-        }
-
-        pdf_path = generate_pdf(pdf_data, name)
-        with open(pdf_path, "rb") as f:
-            st.download_button("📄 Download PDF Summary", data=f, file_name="fna_summary.pdf")
-        os.remove(pdf_path)
-
+ 
 run_streamlit_app()
