@@ -46,9 +46,15 @@ def generate_pdf(data, name):
     pdf.cell(200, 10, txt=f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
     pdf.ln(10)
 
-    for key, value in data.items():
+   for key, value in data.items():
         label = key.replace("_", " ").capitalize()
-        formatted_value = f"₱{value:,.2f}" if isinstance(value, (int, float)) else str(value)
+        if isinstance(value, (int, float)):
+            formatted_value = f"₱{value:,.2f}"
+        elif isinstance(value, list):
+            formatted_value = ", ".join([f"₱{v:,.2f}" if isinstance(v, (int, float)) else str(v) for v in value])
+        else:
+            formatted_value = str(value)
+
         pdf.cell(200, 10, txt=f"{label}: {formatted_value}", ln=True)
 
     fd, path = tempfile.mkstemp(suffix=".pdf")
