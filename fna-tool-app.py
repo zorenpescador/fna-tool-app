@@ -77,7 +77,6 @@ def run_streamlit_app():
         savings_goal = income * 0.20
         recommended_life_coverage = income * 12 * 10
         insurance_gap = max(0, recommended_life_coverage - insurance)
-
         years_to_retirement = max(0, retirement_age - age)
         months_to_retirement = years_to_retirement * 12
         annual_expenses_now = expenses * 12
@@ -87,12 +86,10 @@ def run_streamlit_app():
         fund_4 = future_value_monthly(monthly_retirement_saving, 0.04, months_to_retirement)
         fund_8 = future_value_monthly(monthly_retirement_saving, 0.08, months_to_retirement)
         fund_10 = future_value_monthly(monthly_retirement_saving, 0.10, months_to_retirement)
-
         edu = calculate_education_fund(child_age, college_age, current_annual_tuition, tuition_inflation, college_years)
         months_to_college = edu['years_until_college'] * 12
         monthly_needed_no_growth = edu['total_fund_needed'] / months_to_college if months_to_college > 0 else 0
         monthly_needed_with_growth = required_monthly_saving(edu['total_fund_needed'], 0.06, months_to_college)
-
         total_desired_health = desired_coverage_per_person * num_dependents
         health_coverage_gap = max(0, total_desired_health - current_health_coverage)
 
@@ -135,5 +132,19 @@ def run_streamlit_app():
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
         st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
         st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
+        
+        years_range = list(range(1, years_to_retirement + 1))
+        fund_4_list = [future_value_monthly(monthly_retirement_saving, 0.04, y * 12) for y in years_range]
+        fund_8_list = [future_value_monthly(monthly_retirement_saving, 0.08, y * 12) for y in years_range]
+        fund_10_list = [future_value_monthly(monthly_retirement_saving, 0.10, y * 12) for y in years_range]
+        target_line = [total_retirement_fund] * len(years_range)
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=years_range, y=fund_4_list, mode='lines', name='4% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=fund_8_list, mode='lines', name='8% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=fund_10_list, mode='lines', name='10% Return'))
+        fig.add_trace(go.Scatter(x=years_range, y=target_line, mode='lines', name='Target Fund', line=dict(dash='dash')))
+        fig.update_layout(title="Retirement Fund Growth", xaxis_title="Years", yaxis_title="₱", template="plotly_white")
+        st.plotly_chart(fig, use_container_width=True)
 
 run_streamlit_app()
