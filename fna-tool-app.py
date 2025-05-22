@@ -133,6 +133,8 @@ def run_streamlit_app():
         st.write(f"• 8%: ₱{fund_8:.2f}")
         st.write(f"• 10%: ₱{fund_10:.2f}")
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
+        st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
+        st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
 
         # Retirement Fund Growth Chart
         st.subheader("📈 Retirement Fund Growth Projection")
