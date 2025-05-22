@@ -46,7 +46,7 @@ def generate_pdf(data, name):
     pdf.cell(200, 10, txt=f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
     pdf.ln(10)
 
-   for key, value in data.items():
+    for key, value in data.items():
         label = key.replace("_", " ").capitalize()
         if isinstance(value, (int, float)):
             formatted_value = f"₱{value:,.2f}"
