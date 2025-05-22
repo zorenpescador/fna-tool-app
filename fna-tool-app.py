@@ -1,6 +1,3 @@
-# Reinjecting the final working app code (with PDF and chart) after reset
-
-fixed_app_code = """
 import streamlit as st
 import plotly.graph_objects as go
 from fpdf import FPDF
@@ -149,10 +146,3 @@ def run_streamlit_app():
         os.remove(pdf_path)
 
 run_streamlit_app()
-"""
-
-# Write to downloadable file
-with open("/mnt/data/fna_app_fixed.py", "w") as f:
-    f.write(fixed_app_code)
-
-"/mnt/data/fna_app_fixed.py"
