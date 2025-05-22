@@ -1,20 +1,20 @@
 import streamlit as st
 
-# === Future Value for Retirement and Education ===
+# === Future Value Calculator (Compounding Monthly) ===
 def future_value_monthly(pmt, annual_rate, months):
     r = annual_rate / 12
     if r == 0:
         return pmt * months
     return pmt * (((1 + r) ** months - 1) / r)
 
-# === Required Monthly Saving for Education Target ===
+# === Required Monthly Saving to Reach Target ===
 def required_monthly_saving(target, rate, months):
     r = rate / 12
     if r == 0:
         return target / months
     return target * r / (((1 + r) ** months - 1))
 
-# === Education Plan ===
+# === Education Fund Calculation ===
 def calculate_education_fund(child_age, college_age, current_annual_tuition, tuition_inflation, college_years):
     years_until_college = max(0, college_age - child_age)
     tuition_projection = []
@@ -32,7 +32,7 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
         "total_fund_needed": total_fund_needed
     }
 
-# === Streamlit App with Integrated FNA + Retirement + Education + Health ===
+# === Streamlit App ===
 def run_streamlit_app():
     st.title("📊 FNA Tool by Zoren Pescador - UH ManulifePH")
 
@@ -43,13 +43,17 @@ def run_streamlit_app():
         income = st.number_input("Monthly Income (₱)", 0.0, value=50000.0)
         expenses = st.number_input("Monthly Expenses (₱)", 0.0, value=20000.0)
         savings = st.number_input("Existing Savings (₱)", 0.0, value=100000.0)
+
+        st.subheader("🛡️ Life Insurance")
         insurance = st.number_input("Life Insurance Coverage (₱)", 0.0, value=250000.0)
 
-        st.subheader("🧓 Retirement Plan")
-        retirement_age = st.slider("Target Retirement Age", 50, 70, 60)
-        years_in_retirement = st.slider("Years in Retirement", 10, 30, 20)
-        inflation_rate = st.slider("Expected Inflation Rate (%)", 0.0, 10.0, 1.5) / 100
-        monthly_retirement_saving = st.number_input("How much can you save monthly for retirement? (₱)", 0.0, value=8000.0)
+        st.subheader("🩺 Health Insurance Plan")
+        current_health_coverage = st.number_input("Your Current Health Coverage (₱)", 0.0, value=100000.0)
+        desired_coverage_per_person = st.number_input("Desired Health Coverage per Person (₱)", 0.0, value=500000.0)
+        num_dependents = st.slider("Number of People to Cover (including you)", 1, 10, 4)
+
+        st.subheader("💰 Savings")
+        emergency_fund_needed = expenses * 6
 
         st.subheader("🎓 Educational Plan")
         child_age = st.number_input("Child's Current Age", 0, 17, 5)
@@ -58,23 +62,21 @@ def run_streamlit_app():
         tuition_inflation = st.slider("Annual Tuition Inflation Rate (%)", 0.0, 10.0, 5.0) / 100
         college_years = st.slider("Years of College", 2, 6, 4)
 
-        st.subheader("🩺 Health Insurance Plan")
-        current_health_coverage = st.number_input("Your Current Health Coverage (₱)", 0.0, value=100000.0)
-        desired_coverage_per_person = st.number_input("Desired Health Coverage per Person (₱)", 0.0, value=500000.0)
-        num_dependents = st.slider("Number of People to Cover (including you)", 1, 10, 4)
+        st.subheader("🧓 Retirement Plan")
+        retirement_age = st.slider("Target Retirement Age", 50, 70, 60)
+        years_in_retirement = st.slider("Years in Retirement", 10, 30, 20)
+        inflation_rate = st.slider("Expected Inflation Rate (%)", 0.0, 10.0, 1.5) / 100
+        monthly_retirement_saving = st.number_input("How much can you save monthly for retirement? (₱)", 0.0, value=8000.0)
 
         submitted = st.form_submit_button("Generate Report")
 
     if submitted:
-        # FNA Calculations
         needs = income * 0.50
         wants = income * 0.30
         savings_goal = income * 0.20
-        emergency_fund_needed = expenses * 6
         recommended_life_coverage = income * 12 * 10
         insurance_gap = max(0, recommended_life_coverage - insurance)
 
-        # Retirement Calculation
         years_to_retirement = max(0, retirement_age - age)
         months_to_retirement = years_to_retirement * 12
         annual_expenses_now = expenses * 12
@@ -85,17 +87,14 @@ def run_streamlit_app():
         fund_8 = future_value_monthly(monthly_retirement_saving, 0.08, months_to_retirement)
         fund_10 = future_value_monthly(monthly_retirement_saving, 0.10, months_to_retirement)
 
-        # Education Plan Calculation
         edu = calculate_education_fund(child_age, college_age, current_annual_tuition, tuition_inflation, college_years)
         months_to_college = edu['years_until_college'] * 12
         monthly_needed_no_growth = edu['total_fund_needed'] / months_to_college if months_to_college > 0 else 0
         monthly_needed_with_growth = required_monthly_saving(edu['total_fund_needed'], 0.06, months_to_college)
 
-        # Health Insurance Calculation
         total_desired_health = desired_coverage_per_person * num_dependents
         health_coverage_gap = max(0, total_desired_health - current_health_coverage)
 
-        # Display Results
         st.subheader(f"📋 FNA Summary for {name}")
         st.write("### 📌 Monthly Budget Breakdown")
         st.write(f"- Needs: ₱{needs:.2f}")
@@ -103,10 +102,24 @@ def run_streamlit_app():
         st.write(f"- Savings Goal: ₱{savings_goal:.2f}")
         st.write("### 🛟 Emergency Fund")
         st.write(f"- Recommended: ₱{emergency_fund_needed:.2f}")
+
         st.write("### 🛡️ Life Insurance")
         st.write(f"- Current Coverage: ₱{insurance:.2f}")
         st.write(f"- Recommended: ₱{recommended_life_coverage:.2f}")
         st.write(f"- Gap: ₱{insurance_gap:.2f}")
+
+        st.write("### 🩺 Health Insurance Summary")
+        st.write(f"- Total Desired Health Coverage: ₱{total_desired_health:,.2f}")
+        st.write(f"- Current Health Coverage: ₱{current_health_coverage:,.2f}")
+        st.write(f"**🩺 Health Coverage Gap: ₱{health_coverage_gap:,.2f}**")
+
+        st.subheader("🎓 Educational Plan Summary")
+        st.write(f"- Years Until College: {edu['years_until_college']}")
+        for i, cost in enumerate(edu['tuition_projection'], 1):
+            st.write(f"Year {i} Tuition: ₱{cost:,.2f}")
+        st.write(f"**Total Education Fund Needed: ₱{edu['total_fund_needed']:,.2f}**")
+        st.write(f"📌 Monthly Savings Needed (No Compounding): ₱{monthly_needed_no_growth:,.2f}")
+        st.write(f"📈 Monthly Savings Needed (6% Growth): ₱{monthly_needed_with_growth:,.2f}")
 
         st.write("### 🧓 Retirement Planning")
         st.write(f"- Years to Retirement: {years_to_retirement}")
@@ -118,18 +131,7 @@ def run_streamlit_app():
         st.write(f"• 8%: ₱{fund_8:.2f}")
         st.write(f"• 10%: ₱{fund_10:.2f}")
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
-
-        st.subheader("🎓 Educational Plan Summary")
-        st.write(f"- Years Until College: {edu['years_until_college']}")
-        for i, cost in enumerate(edu['tuition_projection'], 1):
-            st.write(f"Year {i} Tuition: ₱{cost:,.2f}")
-        st.write(f"**Total Education Fund Needed: ₱{edu['total_fund_needed']:,.2f}**")
-        st.write(f"📌 Monthly Savings Needed (No Compounding): ₱{monthly_needed_no_growth:,.2f}")
-        st.write(f"📈 Monthly Savings Needed (6% Growth): ₱{monthly_needed_with_growth:,.2f}")
-
-        st.subheader("🩺 Health Insurance Summary")
-        st.write(f"- Total Desired Health Coverage: ₱{total_desired_health:,.2f}")
-        st.write(f"- Current Health Coverage: ₱{current_health_coverage:,.2f}")
-        st.write(f"**🩺 Health Coverage Gap: ₱{health_coverage_gap:,.2f}**")
+        st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
+        st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
 
 run_streamlit_app()
