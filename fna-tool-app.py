@@ -24,23 +24,22 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
     years_until_college = max(0, college_age - child_age)
     tuition_projection = []
     total_fund_needed = 0
-
     for year in range(college_years):
         year_of_college = years_until_college + year
         projected_tuition = current_annual_tuition * ((1 + tuition_inflation) ** year_of_college)
         tuition_projection.append(projected_tuition)
         total_fund_needed += projected_tuition
-
     return {
         "years_until_college": years_until_college,
         "tuition_projection": tuition_projection,
         "total_fund_needed": total_fund_needed
     }
 
+# === PDF Generator ===
 def generate_pdf(data, name):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Helvetica", size=12)
 
     pdf.set_title("FNA Summary Report")
     pdf.cell(200, 10, txt=f"FNA Summary for {name}", ln=True, align='C')
@@ -121,31 +120,25 @@ def run_streamlit_app():
 
         st.subheader(f"📋 FNA Summary for {name}")
         st.write("### 📌 Monthly Budget Breakdown")
-        st.write("The 50-30-20 rule is a simple, effective budgeting framework designed to help people manage their money wisely without complex calculations.")
         st.write(f"- Needs: ₱{needs:.2f}")
         st.write(f"- Wants: ₱{wants:.2f}")
         st.write(f"- Savings Goal: ₱{savings_goal:.2f}")
         st.write("### 🛟 Emergency Fund")
         st.write(f"- Recommended: ₱{emergency_fund_needed:.2f}")
-
         st.write("### 🛡️ Life Insurance")
         st.write(f"- Current Coverage: ₱{insurance:.2f}")
         st.write(f"- Recommended: ₱{recommended_life_coverage:.2f}")
         st.write(f"- Gap: ₱{insurance_gap:.2f}")
-
         st.write("### 🩺 Health Insurance Summary")
         st.write(f"- Total Desired Health Coverage: ₱{total_desired_health:,.2f}")
         st.write(f"- Current Health Coverage: ₱{current_health_coverage:,.2f}")
         st.write(f"**🩺 Health Coverage Gap: ₱{health_coverage_gap:,.2f}**")
-
         st.subheader("🎓 Educational Plan Summary")
-        st.write(f"- Years Until College: {edu['years_until_college']}")
         for i, cost in enumerate(edu['tuition_projection'], 1):
             st.write(f"Year {i} Tuition: ₱{cost:,.2f}")
         st.write(f"**Total Education Fund Needed: ₱{edu['total_fund_needed']:,.2f}**")
         st.write(f"📌 Monthly Savings Needed (No Compounding): ₱{monthly_needed_no_growth:,.2f}")
         st.write(f"📈 Monthly Savings Needed (6% Growth): ₱{monthly_needed_with_growth:,.2f}")
-
         st.write("### 🧓 Retirement Planning")
         st.write(f"- Years to Retirement: {years_to_retirement}")
         st.write(f"- Inflation-Adjusted Annual Expenses: ₱{inflated_annual_expenses:.2f}")
@@ -156,11 +149,8 @@ def run_streamlit_app():
         st.write(f"• 8%: ₱{fund_8:.2f}")
         st.write(f"• 10%: ₱{fund_10:.2f}")
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
-        st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
-        st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
 
-        # Retirement Fund Growth Chart
-        st.subheader("📈 Retirement Fund Growth Projection")
+        # Retirement Chart
         years_range = list(range(1, years_to_retirement + 1))
         fund_4_list = [future_value_monthly(monthly_retirement_saving, 0.04, y * 12) for y in years_range]
         fund_8_list = [future_value_monthly(monthly_retirement_saving, 0.08, y * 12) for y in years_range]
@@ -171,36 +161,31 @@ def run_streamlit_app():
         fig.add_trace(go.Scatter(x=years_range, y=fund_4_list, mode='lines', name='4% Return'))
         fig.add_trace(go.Scatter(x=years_range, y=fund_8_list, mode='lines', name='8% Return'))
         fig.add_trace(go.Scatter(x=years_range, y=fund_10_list, mode='lines', name='10% Return'))
-        fig.add_trace(go.Scatter(x=years_range, y=target_line, mode='lines', name='Target Retirement Fund', line=dict(dash='dash')))
-
-        fig.update_layout(
-            title="Projected Retirement Fund vs Goal",
-            xaxis_title="Years Until Retirement",
-            yaxis_title="Projected Fund Value (₱)",
-            legend_title="Growth Rate",
-            template="plotly_white"
-        )
-
+        fig.add_trace(go.Scatter(x=years_range, y=target_line, mode='lines', name='Target Fund', line=dict(dash='dash')))
+        fig.update_layout(title="Retirement Fund Growth", xaxis_title="Years", yaxis_title="₱ Value", template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
 
-        # Collect results into a dictionary
+        # PDF generation
         pdf_data = {
-        "needs": needs,
-        "wants": wants,
-        "savings_goal": savings_goal,
-        "emergency_fund_needed": emergency_fund_needed,
-        "recommended_life_coverage": recommended_life_coverage,
-        "insurance_gap": insurance_gap,
-        "total_desired_health": total_desired_health,
-        "health_coverage_gap": health_coverage_gap,
-        "total_education_fund": edu['total_fund_needed'],
-        "retirement_fund_target": total_retirement_fund,
-        "fund_4": fund_4,
-        "fund_8": fund_8,
-        "fund_10": fund_10
+            "needs": needs,
+            "wants": wants,
+            "savings_goal": savings_goal,
+            "emergency_fund_needed": emergency_fund_needed,
+            "recommended_life_coverage": recommended_life_coverage,
+            "insurance_gap": insurance_gap,
+            "total_desired_health": total_desired_health,
+            "health_coverage_gap": health_coverage_gap,
+            "total_education_fund": edu['total_fund_needed'],
+            "retirement_fund_target": total_retirement_fund,
+            "fund_4": fund_4,
+            "fund_8": fund_8,
+            "fund_10": fund_10
         }
 
-        pdf_file = generate_pdf(pdf_data, name)
-        st.download_button("📄 Download PDF Summary", data=open(pdf_file, "rb"), file_name="fna_summary.pdf")
+        pdf_path = generate_pdf(pdf_data, name)
+        with open(pdf_path, "rb") as f:
+            st.download_button("📄 Download PDF Summary", data=f, file_name="fna_summary.pdf")
+
+        os.remove(pdf_path)
 
 run_streamlit_app()
