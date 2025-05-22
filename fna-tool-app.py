@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
-from fpdf import pdf
+from fpdf import FPDF
 import datetime
 
 # === Future Value Calculator (Compounding Monthly) ===
