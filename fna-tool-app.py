@@ -1,5 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
+from fpdf import pdf
+import datetime
 
 # === Future Value Calculator (Compounding Monthly) ===
 def future_value_monthly(pmt, annual_rate, months):
@@ -32,6 +34,24 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
         "tuition_projection": tuition_projection,
         "total_fund_needed": total_fund_needed
     }
+
+def generate_pdf(data, name):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.set_title("FNA Summary Report")
+    pdf.cell(200, 10, txt=f"FNA Summary for {name}", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
+    pdf.ln(10)
+
+    for key, value in data.items():
+        label = key.replace("_", " ").capitalize()
+        pdf.cell(200, 10, txt=f"{label}: ₱{value:,.2f}", ln=True)
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        pdf.output(tmp_file.name)
+        return tmp_file.name
 
 # === Streamlit App ===
 def run_streamlit_app():
@@ -159,5 +179,25 @@ def run_streamlit_app():
         )
 
         st.plotly_chart(fig, use_container_width=True)
+
+        # Collect results into a dictionary
+        pdf_data = {
+        "needs": needs,
+        "wants": wants,
+        "savings_goal": savings_goal,
+        "emergency_fund_needed": emergency_fund_needed,
+        "recommended_life_coverage": recommended_life_coverage,
+        "insurance_gap": insurance_gap,
+        "total_desired_health": total_desired_health,
+        "health_coverage_gap": health_coverage_gap,
+        "total_education_fund": edu['total_fund_needed'],
+        "retirement_fund_target": total_retirement_fund,
+        "fund_4": fund_4,
+        "fund_8": fund_8,
+        "fund_10": fund_10
+        }
+
+        pdf_file = generate_pdf(pdf_data, name)
+        st.download_button("📄 Download PDF Summary", data=open(pdf_file, "rb"), file_name="fna_summary.pdf")
 
 run_streamlit_app()
