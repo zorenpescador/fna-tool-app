@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 
-# === Future Value Calculator ===
+# === Future Value Calculator (Compounding Monthly) ===
 def future_value_monthly(pmt, annual_rate, months):
     r = annual_rate / 12
     if r == 0:
@@ -20,11 +20,13 @@ def calculate_education_fund(child_age, college_age, current_annual_tuition, tui
     years_until_college = max(0, college_age - child_age)
     tuition_projection = []
     total_fund_needed = 0
+
     for year in range(college_years):
         year_of_college = years_until_college + year
         projected_tuition = current_annual_tuition * ((1 + tuition_inflation) ** year_of_college)
         tuition_projection.append(projected_tuition)
         total_fund_needed += projected_tuition
+
     return {
         "years_until_college": years_until_college,
         "tuition_projection": tuition_projection,
@@ -36,24 +38,37 @@ def run_streamlit_app():
     st.title("📊 FNA Tool by Zoren Pescador - UH ManulifePH")
 
     with st.form("fna_form"):
+        st.subheader("👨‍👩‍👧 Basic Info & Budget")
         name = st.text_input("Full Name")
         age = st.number_input("Your Age", 18, 100, 30)
         income = st.number_input("Monthly Income (₱)", 0.0, value=50000.0)
         expenses = st.number_input("Monthly Expenses (₱)", 0.0, value=20000.0)
         savings = st.number_input("Existing Savings (₱)", 0.0, value=100000.0)
+
+        st.subheader("🛡️ Life Insurance")
         insurance = st.number_input("Life Insurance Coverage (₱)", 0.0, value=250000.0)
-        current_health_coverage = st.number_input("Current Health Coverage (₱)", 0.0, value=100000.0)
+
+        st.subheader("🩺 Health Insurance Plan")
+        current_health_coverage = st.number_input("Your Current Health Coverage (₱)", 0.0, value=100000.0)
         desired_coverage_per_person = st.number_input("Desired Health Coverage per Person (₱)", 0.0, value=500000.0)
-        num_dependents = st.slider("People to Cover (incl. you)", 1, 10, 4)
-        child_age = st.number_input("Child's Age", 0, 17, 5)
-        college_age = st.number_input("College Start Age", 15, 25, 18)
+        num_dependents = st.slider("Number of People to Cover (including you)", 1, 10, 4)
+
+        st.subheader("💰 Savings")
+        emergency_fund_needed = expenses * 6
+
+        st.subheader("🎓 Educational Plan")
+        child_age = st.number_input("Child's Current Age", 0, 17, 5)
+        college_age = st.number_input("Target College Start Age", 15, 25, 18)
         current_annual_tuition = st.number_input("Current Annual Tuition (₱)", 10000.0, 1000000.0, 60000.0)
-        tuition_inflation = st.slider("Tuition Inflation Rate (%)", 0.0, 10.0, 5.0) / 100
+        tuition_inflation = st.slider("Annual Tuition Inflation Rate (%)", 0.0, 10.0, 5.0) / 100
         college_years = st.slider("Years of College", 2, 6, 4)
+
+        st.subheader("🧓 Retirement Plan")
         retirement_age = st.slider("Target Retirement Age", 50, 70, 60)
         years_in_retirement = st.slider("Years in Retirement", 10, 30, 20)
-        inflation_rate = st.slider("Inflation Rate (%)", 0.0, 10.0, 1.5) / 100
-        monthly_retirement_saving = st.number_input("Monthly Retirement Saving (₱)", 0.0, value=8000.0)
+        inflation_rate = st.slider("Expected Inflation Rate (%)", 0.0, 10.0, 1.5) / 100
+        monthly_retirement_saving = st.number_input("How much can you save monthly for retirement? (₱)", 0.0, value=8000.0)
+
         submitted = st.form_submit_button("Generate Report")
 
     if submitted:
@@ -120,19 +135,5 @@ def run_streamlit_app():
         st.write(f"• Supports ₱{fund_4 / years_in_retirement:.2f}/year at 4%")
         st.write(f"• Supports ₱{fund_8 / years_in_retirement:.2f}/year at 8%")
         st.write(f"• Supports ₱{fund_10 / years_in_retirement:.2f}/year at 10%")
-
-        years_range = list(range(1, years_to_retirement + 1))
-        fund_4_list = [future_value_monthly(monthly_retirement_saving, 0.04, y * 12) for y in years_range]
-        fund_8_list = [future_value_monthly(monthly_retirement_saving, 0.08, y * 12) for y in years_range]
-        fund_10_list = [future_value_monthly(monthly_retirement_saving, 0.10, y * 12) for y in years_range]
-        target_line = [total_retirement_fund] * len(years_range)
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=years_range, y=fund_4_list, mode='lines', name='4% Return'))
-        fig.add_trace(go.Scatter(x=years_range, y=fund_8_list, mode='lines', name='8% Return'))
-        fig.add_trace(go.Scatter(x=years_range, y=fund_10_list, mode='lines', name='10% Return'))
-        fig.add_trace(go.Scatter(x=years_range, y=target_line, mode='lines', name='Target Fund', line=dict(dash='dash')))
-        fig.update_layout(title="Retirement Fund Growth", xaxis_title="Years", yaxis_title="₱", template="plotly_white")
-        st.plotly_chart(fig, use_container_width=True)
 
 run_streamlit_app()
