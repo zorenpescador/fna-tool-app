@@ -49,7 +49,8 @@ def generate_pdf(data, name):
 
     for key, value in data.items():
         label = key.replace("_", " ").capitalize()
-        pdf.cell(200, 10, txt=f"{label}: ₱{value:,.2f}", ln=True)
+        formatted_value = f"₱{value:,.2f}" if isinstance(value, (int, float)) else str(value)
+        pdf.cell(200, 10, txt=f"{label}: {formatted_value}", ln=True)
 
     fd, path = tempfile.mkstemp(suffix=".pdf")
     pdf.output(path)
